@@ -1,1 +1,1366 @@
-                                       TEST_Contant
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct  2 21:53:03 2018
+
+@author: user
+"""
+
+from tkinter import *
+import tkinter as tk
+from tkinter import messagebox
+import requests
+import pandas as pd
+import numpy as np
+import time
+import pylab as pl
+import matplotlib.pyplot as plt
+from collections import defaultdict
+from io import StringIO
+import datetime
+import math
+
+from pandas_datareader import data as pdr
+import fix_yahoo_finance # <== that's all it takes :-)
+from numpy import fft
+from pykalman import KalmanFilter
+
+#import matplotlib as mpl
+#import matplotlib.backends.tkagg as tkagg
+#from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+import matplotlib 
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
+select_value = {}
+
+final_search = []
+
+mounth_list     = {}
+mounth_yoy_list = {}
+
+epsijk_a01_list = {}
+profit_a02_list = {}
+income_a03_list = {}  
+
+
+remain_b01_list = {}
+stocke_b02_list = {}
+capite_b03_list = {}
+anothe_b04_list = {}
+hisdes_b05_list = {}
+contro_b06_list = {}
+curdet_b07_list = {}
+fixdet_b08_list = {}
+curass_b09_list = {}
+fixass_b10_list = {}
+txrate_b11_list = {}
+morate_b12_list = {}
+
+allset_c01_list = {}
+alldeb_c02_list = {}
+allrig_c03_list = {}
+
+taname_d01_list  = {}
+detass_d02_list  = {}
+fixfat_d03_list  = {}
+carati_d04_list  = {}
+sarati_d05_list  = {}
+taxtim_d06_list  = {}
+recevr_d07_list  = {}
+recday_d08_list  = {}
+stckrt_d09_list  = {}
+avgsal_d10_list  = {}
+fixrat_d11_list  = {}
+tolass_d12_list  = {}
+tassra_d13_list  = {}
+stocks_d14_list  = {}
+bedtax_d15_list  = {}
+purati_d16_list  = {}
+epasyy_d17_list  = {}
+cashrt_d18_list  = {}
+casftf_d19_list  = {}
+casrec_d20_list  = {}
+
+test1  = pd.DataFrame()
+test2  = pd.DataFrame()
+test3  = pd.DataFrame()
+
+EPSIJK_a01  = pd.DataFrame()
+PROFIT_a02  = pd.DataFrame()
+INCOME_a03  = pd.DataFrame()
+
+
+REMAIN_b01    = pd.DataFrame()
+STOCKE_b02    = pd.DataFrame()
+CAPITE_b03    = pd.DataFrame()
+ANOTHE_b04    = pd.DataFrame()
+HISDES_b05    = pd.DataFrame()
+CONTRO_b06    = pd.DataFrame()
+CURDET_b07    = pd.DataFrame()
+FIXDET_b08    = pd.DataFrame()
+CURASS_b09    = pd.DataFrame()
+FIXASS_b10    = pd.DataFrame()
+TXRATE_b11    = pd.DataFrame()
+MORATE_b12    = pd.DataFrame()
+
+ALLSET_c01    = pd.DataFrame()
+ALLDEB_c02    = pd.DataFrame()
+ALLRIG_c03    = pd.DataFrame()
+    
+TANAME_d01  = pd.DataFrame()
+DETASS_d02  = pd.DataFrame()
+FIXFAT_d03  = pd.DataFrame()
+CARATI_d04  = pd.DataFrame()
+SARATI_d05  = pd.DataFrame()
+TAXTIM_d06  = pd.DataFrame()
+RECEVR_d07  = pd.DataFrame()
+RECDAY_d08  = pd.DataFrame()
+STCKRT_d09  = pd.DataFrame()
+AVGSAL_d10  = pd.DataFrame()
+FIXRAT_d11  = pd.DataFrame()
+TOLASS_d12  = pd.DataFrame()
+TASSRA_d13  = pd.DataFrame()
+STOCKS_d14  = pd.DataFrame()
+BEDTAX_d15  = pd.DataFrame()
+PURATI_d16  = pd.DataFrame()
+EPASYY_d17  = pd.DataFrame()
+CASHRT_d18  = pd.DataFrame()
+CASFTF_d19  = pd.DataFrame()
+CASREC_d20  = pd.DataFrame()
+  
+month_reven = pd.DataFrame()
+month_name = pd.DataFrame()
+month_yoy = pd.DataFrame()
+
+data = {}
+test_name = {}
+data_a = {}
+data_b = {}
+data_c = {}
+data_d = {}
+
+n_days = 12
+now = datetime.datetime.now()
+year = now.year
+
+if now.day > 10:
+  month = now.month-1
+else:
+  month = now.month-2
+  
+if (now.month == 1):
+    season = 3
+elif (now.month == 2):
+    season = 3
+elif (now.month == 3):   
+    season = 3
+elif (now.month == 4):   
+    season = 4
+elif (now.month == 5):
+    if (now.day >15):
+        season = 1
+    else :
+        season = 4
+elif (now.month == 6):
+    season = 1
+elif (now.month == 7):
+    season = 1
+elif (now.month == 8):
+    if (now.day > 14):
+        season = 2
+    else :
+        season = 1
+elif (now.month == 9):
+    season = 2
+elif (now.month == 10):
+    season = 2
+elif (now.month == 11):
+    if (now.day >14 ):
+        season =3
+    else :    
+        season = 2
+elif (now.month == 12):
+    season = 3    
+    
+
+if (now.month > 4):  
+    if (now.day>15):
+        asset_year = now.year-1
+        test_year = now.year-5
+    else:
+        asset_year = now.year-2
+        test_year = now.year-6        
+else:
+    asset_year = now.year-2
+    test_year = now.year-6
+    
+    
+def removechar(name):
+    b = "\/?*:<>|%"
+    for char in b:
+        name = name.replace(char,"")
+
+    return name
+
+def name_sort(data,name):  
+  f = name
+  for k in data.keys():
+    data[k].index = data[k]['公司代號']
+    
+  df = pd.DataFrame({k:df[f] for k, df in data.items()}).transpose()
+  df.index = pd.to_datetime(df.index)
+  df = df.sort_index()   
+  df = df.reset_index(drop=True)
+  name = removechar(f)
+  df.to_csv(name+'test.csv', sep=',', encoding='utf-8')   
+  
+  return df
+
+def global_save(): 
+    global EPSIJK_a01 
+    global PROFIT_a02  
+    global INCOME_a03  
+
+    global REMAIN_b01     
+    global STOCKE_b02    
+    global CAPITE_b03    
+    global ANOTHE_b04   
+    global HISDES_b05     
+    global CONTRO_b06   
+    global CURDET_b07    
+    global FIXDET_b08   
+    global CURASS_b09   
+    global FIXASS_b10    
+    global TXRATE_b11   
+    global MORATE_b12     
+
+    global ALLSET_c01    
+    global ALLDEB_c02   
+    global ALLRIG_c03   
+    
+    global TANAME_d01  
+    global DETASS_d02  
+    global FIXFAT_d03  
+    global CARATI_d04  
+    global SARATI_d05  
+    global TAXTIM_d06   
+    global RECEVR_d07  
+    global RECDAY_d08   
+    global STCKRT_d09   
+    global AVGSAL_d10  
+    global FIXRAT_d11   
+    global TOLASS_d12   
+    global TASSRA_d13  
+    global STOCKS_d14  
+    global BEDTAX_d15   
+    global PURATI_d16   
+    global EPASYY_d17 
+    global CASHRT_d18  
+    global CASFTF_d19  
+    global CASREC_d20  
+        
+    EPSIJK_a01 = name_sort(data_a,'基本每股盈餘（元）')
+    PROFIT_a02 = name_sort(data_a,'繼續營業單位本期淨利（淨損）')  
+    INCOME_a03 = name_sort(data_a,'營業收入')      
+     
+    REMAIN_b01 = name_sort(data_b,'資產總額') 
+    STOCKE_b02 = name_sort(data_b,'權益總額')   
+    CAPITE_b03 = name_sort(data_b,'每股參考淨值')   
+    ANOTHE_b04 = name_sort(data_b,'股本')   
+    HISDES_b05 = name_sort(data_b,'資本公積')    
+    CONTRO_b06 = name_sort(data_b,'保留盈餘') 
+    CURDET_b07 = name_sort(data_b,'其他權益') 
+    FIXDET_b08 = name_sort(data_b,'庫藏股票')     
+    CURASS_b09 = name_sort(data_b,'非控制權益')  
+    FIXASS_b10 = name_sort(data_b,'流動負債')     
+    TXRATE_b11 = name_sort(data_b,'流動資產')      
+    MORATE_b12 = name_sort(data_b,'非流動資產')  
+    
+    ALLSET_c01 = name_sort(data_c,'稅後純益率(%)(稅後純益)/(營業收入)')  
+    ALLDEB_c02 = name_sort(data_c,'毛利率(%)(營業毛利)/(營業收入)')  
+    ALLRIG_c03 = name_sort(data_c,'營業利益率(%)(營業利益)/(營業收入)')      
+
+    TANAME_d01 = name_sort(data_d,'負債佔資產比率(%)')     
+    DETASS_d02 = name_sort(data_d,'長期資金佔不動產、廠房及設備比率(%)') 
+    FIXFAT_d03 = name_sort(data_d,'流動比率(%)') 
+    CARATI_d04 = name_sort(data_d,'速動比率(%)') 
+    SARATI_d05 = name_sort(data_d,'利息保障倍數(%)') 
+    TAXTIM_d06 = name_sort(data_d,'應收款項週轉率(次)') 
+    RECEVR_d07 = name_sort(data_d,'平均收現日數') 
+    RECDAY_d08 = name_sort(data_d,'存貨週轉率(次)') 
+    STCKRT_d09 = name_sort(data_d,'平均銷貨日數') 
+    AVGSAL_d10 = name_sort(data_d,'不動產、廠房及設備週轉率(次)') 
+    FIXRAT_d11 = name_sort(data_d,'總資產週轉率(次)') 
+    TOLASS_d12 = name_sort(data_d,'資產報酬率(%)')     
+    TASSRA_d13 = name_sort(data_d,'權益報酬率(%)')   
+    STOCKS_d14 = name_sort(data_d,'稅前純益佔實收資本比率(%)')   
+    BEDTAX_d15 = name_sort(data_d,'純益率(%)')   
+    PURATI_d16 = name_sort(data_d,'每股盈餘(元)')   
+    EPASYY_d17 = name_sort(data_d,'現金流量比率(%)')   
+    CASHRT_d18 = name_sort(data_d,'現金流量允當比率(%)')     
+    CASFTF_d19 = name_sort(data_d,'現金再投資比率(%)')     
+
+def global_read(): 
+    global EPSIJK_a01 
+    global PROFIT_a02  
+    global INCOME_a03  
+
+    global REMAIN_b01     
+    global STOCKE_b02    
+    global CAPITE_b03    
+    global ANOTHE_b04   
+    global HISDES_b05     
+    global CONTRO_b06   
+    global CURDET_b07    
+    global FIXDET_b08   
+    global CURASS_b09   
+    global FIXASS_b10    
+    global TXRATE_b11   
+    global MORATE_b12     
+
+    global ALLSET_c01    
+    global ALLDEB_c02   
+    global ALLRIG_c03   
+    
+    global TANAME_d01  
+    global DETASS_d02  
+    global FIXFAT_d03  
+    global CARATI_d04  
+    global SARATI_d05  
+    global TAXTIM_d06   
+    global RECEVR_d07  
+    global RECDAY_d08   
+    global STCKRT_d09   
+    global AVGSAL_d10  
+    global FIXRAT_d11   
+    global TOLASS_d12   
+    global TASSRA_d13  
+    global STOCKS_d14  
+    global BEDTAX_d15   
+    global PURATI_d16   
+    global EPASYY_d17 
+    global CASHRT_d18  
+    global CASFTF_d19  
+    global CASREC_d20  
+    
+    f = open(removechar('基本每股盈餘（元）')+'test.csv')
+    EPSIJK_a01 = pd.read_csv(f) 
+    f = open(removechar('繼續營業單位本期淨利（淨損）')+'test.csv') 
+    PROFIT_a02 = pd.read_csv(f)       
+    f = open(removechar('營業收入')+'test.csv')     
+    INCOME_a03 = pd.read_csv(f)         
+    f = open(removechar('資產總額')+'test.csv')       
+    REMAIN_b01 = pd.read_csv(f)
+    f = open(removechar('權益總額')+'test.csv')      
+    STOCKE_b02 = pd.read_csv(f) 
+    f = open(removechar('每股參考淨值')+'test.csv')       
+    CAPITE_b03 = pd.read_csv(f)
+    f = open(removechar('股本')+'test.csv')       
+    ANOTHE_b04 = pd.read_csv(f)
+    f = open(removechar('資本公積')+'test.csv')     
+    HISDES_b05 = pd.read_csv(f)     
+    f = open(removechar('保留盈餘')+'test.csv')      
+    CONTRO_b06 = pd.read_csv(f)  
+    f = open(removechar('其他權益')+'test.csv')       
+    CURDET_b07 = pd.read_csv(f) 
+    f = open(removechar('庫藏股票')+'test.csv')       
+    FIXDET_b08 = pd.read_csv(f) 
+    f = open(removechar('非控制權益')+'test.csv')       
+    CURASS_b09 = pd.read_csv(f)   
+    f = open(removechar('流動負債')+'test.csv')      
+    FIXASS_b10 = pd.read_csv(f)
+    f = open(removechar('流動資產')+'test.csv')       
+    TXRATE_b11 = pd.read_csv(f) 
+    f = open(removechar('非流動資產')+'test.csv')        
+    MORATE_b12 = pd.read_csv(f)   
+    f = open(removechar('稅後純益率(%)(稅後純益)/(營業收入)')+'test.csv')      
+    ALLSET_c01 = pd.read_csv(f)
+    f = open(removechar('毛利率(%)(營業毛利)/(營業收入)')+'test.csv')       
+    ALLDEB_c02 = pd.read_csv(f)
+    f = open(removechar('營業利益率(%)(營業利益)/(營業收入)')+'test.csv')      
+    ALLRIG_c03 = pd.read_csv(f)       
+    f = open(removechar('負債佔資產比率(%)')+'test.csv')  
+    TANAME_d01 = pd.read_csv(f)  
+    f = open(removechar('長期資金佔不動產、廠房及設備比率(%)')+'test.csv')      
+    DETASS_d02 = pd.read_csv(f)  
+    f = open(removechar('流動比率(%)')+'test.csv')      
+    FIXFAT_d03 = pd.read_csv(f)  
+    f = open(removechar('速動比率(%)')+'test.csv')   
+    CARATI_d04 = pd.read_csv(f)  
+    f = open(removechar('利息保障倍數(%)')+'test.csv')     
+    SARATI_d05 = pd.read_csv(f)  
+    f = open(removechar('應收款項週轉率(次)')+'test.csv')      
+    TAXTIM_d06 = pd.read_csv(f)  
+    f = open(removechar('平均收現日數')+'test.csv')       
+    RECEVR_d07 = pd.read_csv(f)  
+    f = open(removechar('存貨週轉率(次)')+'test.csv')     
+    RECDAY_d08 = pd.read_csv(f)  
+    f = open(removechar('平均銷貨日數')+'test.csv')      
+    STCKRT_d09 = pd.read_csv(f)  
+    f = open(removechar('不動產、廠房及設備週轉率(次)')+'test.csv')      
+    AVGSAL_d10 = pd.read_csv(f)  
+    f = open(removechar('總資產週轉率(次)')+'test.csv')     
+    FIXRAT_d11 = pd.read_csv(f)  
+    f = open(removechar('資產報酬率(%)')+'test.csv')     
+    TOLASS_d12 = pd.read_csv(f)    
+    f = open(removechar('權益報酬率(%)')+'test.csv')     
+    TASSRA_d13 = pd.read_csv(f)  
+    f = open(removechar('稅前純益佔實收資本比率(%)')+'test.csv')    
+    STOCKS_d14 = pd.read_csv(f)  
+    f = open(removechar('純益率(%)')+'test.csv')     
+    BEDTAX_d15 = pd.read_csv(f)  
+    f = open(removechar('每股盈餘(元)')+'test.csv')     
+    PURATI_d16 = pd.read_csv(f)    
+    f = open(removechar('現金流量比率(%)')+'test.csv')      
+    EPASYY_d17 = pd.read_csv(f)  
+    f = open(removechar('現金流量允當比率(%)')+'test.csv')    
+    CASHRT_d18 = pd.read_csv(f) 
+    f = open(removechar('現金再投資比率(%)')+'test.csv')      
+    CASFTF_d19 = pd.read_csv(f)   
+
+def global_delet(): 
+    global EPSIJK_a01 
+    global PROFIT_a02  
+    global INCOME_a03  
+
+    global REMAIN_b01     
+    global STOCKE_b02    
+    global CAPITE_b03    
+    global ANOTHE_b04   
+    global HISDES_b05     
+    global CONTRO_b06   
+    global CURDET_b07    
+    global FIXDET_b08   
+    global CURASS_b09   
+    global FIXASS_b10    
+    global TXRATE_b11   
+    global MORATE_b12     
+
+    global ALLSET_c01    
+    global ALLDEB_c02   
+    global ALLRIG_c03   
+    
+    global TANAME_d01  
+    global DETASS_d02  
+    global FIXFAT_d03  
+    global CARATI_d04  
+    global SARATI_d05  
+    global TAXTIM_d06   
+    global RECEVR_d07  
+    global RECDAY_d08   
+    global STCKRT_d09   
+    global AVGSAL_d10  
+    global FIXRAT_d11   
+    global TOLASS_d12   
+    global TASSRA_d13  
+    global STOCKS_d14  
+    global BEDTAX_d15   
+    global PURATI_d16   
+    global EPASYY_d17 
+    global CASHRT_d18  
+    global CASFTF_d19  
+    global CASREC_d20  
+    
+    season_delet(EPSIJK_a01)
+    season_delet(PROFIT_a02)
+    season_delet(INCOME_a03)
+    
+    season_delet(REMAIN_b01)   
+    season_delet(STOCKE_b02)     
+    season_delet(CAPITE_b03)  
+    season_delet(ANOTHE_b04) 
+    season_delet(HISDES_b05)     
+    season_delet(CONTRO_b06) 
+    season_delet(CURDET_b07)
+    season_delet(FIXDET_b08)    
+    season_delet(CURASS_b09)     
+    season_delet(FIXASS_b10)     
+    season_delet(TXRATE_b11)
+    season_delet(MORATE_b12)  
+    
+    season_delet(ALLSET_c01)    
+    season_delet(ALLDEB_c02)      
+    season_delet(ALLRIG_c03)   
+    
+    season_delet(TANAME_d01) 
+    season_delet(DETASS_d02)     
+    season_delet(FIXFAT_d03)      
+    season_delet(CARATI_d04)  
+    season_delet(SARATI_d05)  
+    season_delet(TAXTIM_d06) 
+    season_delet(RECEVR_d07) 
+    season_delet(RECDAY_d08)   
+    season_delet(STCKRT_d09)
+    season_delet(AVGSAL_d10)    
+    season_delet(FIXRAT_d11)       
+    season_delet(TOLASS_d12)  
+    season_delet(TASSRA_d13)
+    season_delet(STOCKS_d14)
+    season_delet(BEDTAX_d15)   
+    season_delet(PURATI_d16)     
+    season_delet(EPASYY_d17)  
+    season_delet(CASHRT_d18)      
+    season_delet(CASFTF_d19)  
+    season_delet(CASREC_d20)       
+    
+def monthly_report(year, month):
+    
+    # 假如是西元，轉成民國
+    if year > 1990:
+        year -= 1911
+    
+    url = 'http://mops.twse.com.tw/nas/t21/sii/t21sc03_'+str(year)+'_'+str(month)+'_0.html'
+    if year <= 98:
+        url = 'http://mops.twse.com.tw/nas/t21/sii/t21sc03_'+str(year)+'_'+str(month)+'.html'
+    
+    # 偽瀏覽器
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+    
+    # 下載該年月的網站，並用pandas轉換成 dataframe
+    r = requests.get(url, headers)
+    r.encoding = 'big5'
+    html_df = pd.read_html(StringIO(r.text))
+    
+    # 處理一下資料
+    if html_df[0].shape[0] > 500:
+        df = html_df[0].copy()
+    else:
+        df = pd.concat([df for df in html_df if df.shape[1] <= 11])
+    df = df[list(range(0,10))]
+    column_index = df.index[(df[0] == '公司代號')][0]
+    df.columns = df.iloc[column_index]
+    df['當月營收'] = pd.to_numeric(df['當月營收'], 'coerce')
+    df = df[~df['當月營收'].isnull()]
+    df = df[df['公司代號'] != '合計']
+    
+    # 偽停頓
+    time.sleep(5)
+    return df
+
+def financial_statement(year, season, type='綜合損益彙總表'):
+    if year >= 1000:
+        year -= 1911
+        
+    fine_go = 0;
+        
+    if type == '綜合損益彙總表':
+        url = 'http://mops.twse.com.tw/mops/web/ajax_t163sb04'
+    elif type == '資產負債彙總表':
+        url = 'http://mops.twse.com.tw/mops/web/ajax_t163sb05'
+    elif type == '營益分析彙總表':
+        url = 'http://mops.twse.com.tw/mops/web/ajax_t163sb06'
+    elif type == '財務分析彙總表':
+        url = 'http://mops.twse.com.tw/mops/web/ajax_t51sb02' 
+        fine_go = 1           
+    else:
+        print('type does not match')
+    r = requests.post(url, {
+        'encodeURIComponent':1,
+        'step':1,
+        'firstin':1,
+        'off':1,
+        'TYPEK':'sii',
+        'year':str(year),
+        'season':str(season),
+        'isnew':'Y',
+        'ifrs':'Y',        
+    })
+    
+    r.encoding = 'utf8'
+    dfs = pd.read_html(r.text)
+    
+    if fine_go ==1:    
+      for i, df in enumerate(dfs):
+        if len(dfs[i])>2:
+            df.columns = df.iloc[0][0:2].append(df.iloc[1][0:19])
+            dfs[i] = df.iloc[2:]
+        
+
+      df = df[df['公司代號'] != '公司代號']
+      df = df[df['公司代號'] != '負債佔資產比率(%)']
+      df = df[~df['公司代號'].isnull()]   
+    else:   
+      for i, df in enumerate(dfs):
+        df.columns = df.iloc[0]
+        dfs[i] = df.iloc[1:]
+        
+      df = pd.concat(dfs).applymap(lambda x: x if x != '--' else np.nan)
+      df = df[df['公司代號'] != '公司代號']
+      df = df[~df['公司代號'].isnull()]
+      
+    return df
+
+def monthly_delet(pddf):
+    conum = list(pddf.columns.values)        
+    leng = len(conum)      
+    temp_list = {}
+
+    for i in range(leng):
+        for j in range(12):
+            da = pddf[conum[i]][j] 
+
+            if math.isnan(da):
+                del pddf[conum[i]]
+                break            
+            elif da<=0:
+                del pddf[conum[i]]
+                break 
+#            if da<=0 or math.isnan(da):
+#                del pddf[conum[i]]
+#                break
+            
+    return pddf
+
+def monthly_sort(data,name):  
+  f = name
+  for k in data.keys():
+    data[k].index = data[k]['公司代號']
+    
+  df = pd.DataFrame({k:df[f] for k, df in data.items()}).transpose()
+  df.index = pd.to_datetime(df.index)
+  df = df.sort_index()   
+  df = df.reset_index(drop=True)
+  name = removechar(f)
+  df.to_csv(name+'test.csv', sep=',', encoding='utf-8')   
+  
+  return df
+    
+def monthly_Button():
+    global data
+    global n_days
+    global now 
+    global year
+    global month
+    global month_reven
+    global month_name
+    global month_yoy
+    
+    a = v_int.get()
+
+    if a==1:
+        while len(data) < n_days:
+            print('parsing', year, month) 
+    # 使用 crawPrice 爬資料
+            try:
+                data['%d-%d-01'%(year, month)] = monthly_report(year, month)
+            except Exception as e:
+                print('get 404, please check if the revenues are not revealed')
+    
+    # 減一個月
+            month -= 1
+            if month == 0:
+                month = 12
+                year -= 1          
+            time.sleep(10)
+        
+        test_name = data
+        month_reven = monthly_sort(data,'當月營收')
+        month_name = monthly_sort(data,'公司名稱')
+        month_yoy = monthly_sort(data,'去年同月增減(%)')           
+    else:
+        f = open(removechar('當月營收')+'test.csv')
+        month_reven = pd.read_csv(f)
+        f = open(removechar('去年同月增減(%)')+'test.csv')         
+        month_yoy = pd.read_csv(f)        
+        f = open(removechar('公司名稱')+'test.csv', encoding = 'utf8')         
+        month_name = pd.read_csv(f)            
+#        month_reven = pd.read_csv('month_reven.csv')
+#        month_name = pd.read_csv('month_name.csv')
+#        month_yoy = pd.read_csv('month_yoy.csv')
+        text.delete(1.0,END)
+        text.insert(INSERT,"TEST")
+        print("TEST")
+        
+    month_reven = monthly_delet(month_reven) 
+#    month_name = monthly_delet(month_name)  
+#    month_yoy = monthly_delet(month_yoy)
+    
+def season_delet(pddf):
+    conum = list(pddf.columns.values)        
+    leng = len(conum)      
+    temp_list = {}
+
+    for i in range(leng):
+        for j in range(5):
+            da = pddf[conum[i]][j] 
+            if type(da) == str:
+                del pddf[conum[i]]
+                break
+            elif math.isnan(da):
+                del pddf[conum[i]]
+                break            
+            elif da<=0:
+                del pddf[conum[i]]
+                break 
+            
+    return pddf
+    
+def season_Button(): 
+  global season  
+  global asset_year
+  global test_year 
+  global data_a
+  global data_b
+  global data_c
+  
+  v_int_data = v_int.get()
+  
+  if v_int_data==1:    
+    for i in range(5):      
+        print(asset_year, season)
+        data_a['%d-%d-01'%(asset_year, season)] = financial_statement(asset_year,season,'綜合損益彙總表')
+        time.sleep(10) 
+        data_b['%d-%d-01'%(asset_year, season)] = financial_statement(asset_year,season,'資產負債彙總表')
+        time.sleep(10)         
+        data_c['%d-%d-01'%(asset_year, season)] = financial_statement(asset_year,season,'營益分析彙總表')
+        time.sleep(10) 
+        print(test_year)        
+        data_d['%d-%d-01'%(test_year, season)] = financial_statement(test_year,season,'財務分析彙總表')
+        time.sleep(10)          
+#         
+        season = season+1
+    
+        if season == 5:
+            season = 1  
+            asset_year = asset_year+1
+        
+        test_year = test_year+1
+        
+    global_save()  
+  else:
+    global_read()
+    
+  global_delet()
+
+
+def regression_math(padf):
+    conum = list(padf.columns.values)        
+    leng = len(conum)      
+    temp_list = {}
+
+    for i in range(leng):
+       da = padf[conum[i]][0:5] 
+       dx = da.as_matrix()
+       dt = np.arange(0,(dx.size))
+       dp = np.polyfit(dt,dx,1)
+       if dp[0]>0:
+           temp_list[conum[i]] = dp[0]
+           
+    return temp_list    
+
+def avarge_search(padf,threshold,big):
+    conum = list(padf.columns.values)        
+    leng = len(conum)      
+    temp_list = {}
+      
+    for i in range(leng):
+      da = sum(padf[conum[i]])/5 
+      if big == 1:
+          if da>threshold:
+              temp_list[conum[i]] = da
+      else:
+          if da<threshold:         
+              temp_list[conum[i]] = da             
+
+    return temp_list 
+
+def alarge_math(padf,threshold):
+    conum = list(padf.columns.values)        
+    leng = len(conum)      
+    temp_list = {}
+
+    for i in range(leng):
+        if (padf[conum[i]][1])>threshold and (padf[conum[i]][2])>threshold and \
+         (padf[conum[i]][3])>threshold and  (padf[conum[i]][4])>threshold and \
+          (padf[conum[5]][1])>threshold:
+              temp_list[conum[i]] =  padf[conum[i]]   
+
+
+    return temp_list 
+
+def apass_non(padf):
+    conum = list(padf.columns.values)        
+    leng = len(conum)      
+    temp_list = {}
+
+    for i in range(leng):
+        for j in range(5):
+            temp_list[conum[i]] = padf[conum[i]][j]                        
+
+    return temp_list 
+    
+def search_Button():
+    global mounth_list 
+    global mounth_yoy_list 
+    global allset_c01_list
+    global alldeb_c02_list
+    global allrig_c03_list  
+    global fixrat_d11_list    
+    global tolass_d12_list  
+    global tassra_d13_list
+    global final_search
+  
+    conum = list(month_reven.columns.values)        
+    leng = len(conum)      
+    temp_list = {}
+    temp_yoy_list = {}
+    
+    for i in range(leng):
+       da = month_reven[conum[i]][0:12] 
+       dx = da.as_matrix()
+       dt = np.arange(0,(dx.size))
+       dp = np.polyfit(dt,dx,1)
+       if dp[0]>0:
+           temp_list[conum[i]] = dp[0]
+
+    mounth_list = temp_list 
+
+    conum = list(month_yoy.columns.values)        
+    leng = len(conum)     
+    for i in range(leng):
+      da = sum(month_yoy[conum[i]]) 
+      if da>0:
+          temp_yoy_list[conum[i]] = da
+
+    mounth_yoy_list = temp_yoy_list 
+    
+    allset_c01_list = regression_math(ALLSET_c01)
+    alldeb_c02_list = regression_math(ALLDEB_c02)
+    allrig_c03_list = regression_math(ALLRIG_c03)
+    
+    fixrat_d11_list = avarge_search(FIXRAT_d11,0,1)    
+
+    if v_D12.get()  ==1:
+        d12_thres = var_D12.get()           
+        tolass_d12_list = avarge_search(TOLASS_d12,float(d12_thres),1)
+    else:
+        tolass_d12_list = apass_non(TOLASS_d12)
+        
+    if v_D13.get()  ==1:
+        d13_thres = var_D13.get()    
+        tassra_d13_list = avarge_search(TASSRA_d13,float(d13_thres),1)
+    else :
+        tassra_d13_list = apass_non(TASSRA_d13)
+         
+#    alldeb_c02_list = avarge_math(ALLDEB_c02,10)
+#    allrig_c03_list = apass_non(ALLRIG_c03)
+    
+    a = list(mounth_list.keys())  # Month_Report
+ 
+    for i in range(len(a)):
+      if a[i] in allset_c01_list.keys():
+        if a[i] in alldeb_c02_list.keys():
+          if a[i] in allrig_c03_list.keys():
+            if a[i] in mounth_yoy_list.keys():
+                if a[i] in fixrat_d11_list.keys():
+                    if a[i] in tolass_d12_list.keys():
+                        if a[i] in tassra_d13_list.keys():
+                            final_search.append(a[i])  
+             
+    Listbox_1.delete(0, END)
+    
+    for i in range(0,len(final_search)):
+        Listbox_1.insert(0, final_search[i]+ "  "+month_name[final_search[i]][1])
+
+def fourierExtrapolation(x, n_predict):
+    n = x.size
+    n_harm = 200                     # number of harmonics in model
+   
+    t = np.arange(0, n)
+    p = np.polyfit(t, x, 1)         # find linear trend in x
+    x_notrend = x - p[0] * t        # detrended x
+    x_freqdom = fft.fft(x_notrend)  # detrended x in frequency domain
+    f = fft.fftfreq(n)              # frequencies
+    indexes = list(range(n))
+    # sort indexes by frequency, lower -> higher
+    indexes.sort(key = lambda i: np.absolute(f[i]))
+ 
+    t = np.arange(0, n + n_predict)
+    restored_sig = np.zeros(t.size)
+    for i in indexes[:1 + n_harm * 2]:
+        ampli = np.absolute(x_freqdom[i]) / n   # amplitude
+        phase = np.angle(x_freqdom[i])          # phase
+        restored_sig += ampli * np.cos(2 * np.pi * f[i] * t + phase)
+       
+    return restored_sig + p[0] * t
+
+def line_Button():
+    
+    kf = KalmanFilter(transition_matrices = [1],
+                      observation_matrices = [1],
+                      initial_state_mean = 0,
+                      initial_state_covariance = 1,
+                      observation_covariance=1,
+                      transition_covariance=.01)
+
+    fix_yahoo_finance.pdr_override()
+    
+    data_x = pdr.get_data_yahoo(select_value +".TW",str(now.year-4)+'-'+str(now.month)+'-'+str(now.day),str(now.year)+'-'+str(now.month)+'-'+str(now.day-1))
+#    data_x.to_csv('TESTAtrack.csv', sep=',', encoding='utf-8')    
+#    data_x = pd.read_csv('Atrack.csv')
+#    data_x.drop(['Date'],axis=1,inplace=True)
+
+    x = data_x['Close'].as_matrix()
+
+    n_predict = 100
+    fourier = fourierExtrapolation(x, n_predict)
+    extrapolation = x #fourierExtrapolation(x, n_predict)
+
+# Construct a Kalman filter
+    kf = KalmanFilter(transition_matrices = [1],
+                      observation_matrices = [1],
+                      initial_state_mean = 0,
+                      initial_state_covariance = 1,
+                      observation_covariance=1,
+                      transition_covariance=.01)
+
+# Use the observed values of the price to get a rolling mean
+#state_means, _ = kf.filter(data_x.values)
+    state_means, _ = kf.filter(extrapolation)
+#state_means = pd.Series(state_means.flatten(), index=data_x.index)
+
+# Compute the rolling mean with various lookback windows
+    mean30 = pd.rolling_mean(extrapolation, 30)
+    mean60 = pd.rolling_mean(extrapolation, 60)
+    mean90 = pd.rolling_mean(extrapolation, 90)
+
+    pl.plot(np.arange(0, extrapolation.size), extrapolation, 'r', label = 'extrapolation')
+    pl.plot(np.arange(0, x.size), x, 'b', label = 'x')
+    pl.plot(np.arange(0, state_means.size), state_means, 'y', label = 'Kalman')
+    pl.plot(np.arange(0, mean30.size), mean30, label = 'mean30')
+    pl.plot(np.arange(0, mean60.size), mean60, label = 'mean60')
+    pl.plot(np.arange(0, mean90.size), mean90, label = 'mean90')
+#pl.plot(np.arange(0, exam_x.size), exam_x, 'g', label = 'REAL')
+    pl.legend()
+    pl.show()
+    
+    fig = Figure(figsize=(12, 7), dpi=80)   
+    ax = fig.add_subplot(111)
+    ax.plot(np.arange(0, fourier.size), fourier, 'r', label = 'fourier')
+    ax.plot(np.arange(0, x.size), x, 'b', label = 'x')
+    #ax.plot(np.arange(0, state_means.size), state_means, 'y', label = 'Kalman')
+    ax.plot(np.arange(0, mean30.size)-30, mean30, label = 'mean30')
+    ax.plot(np.arange(0, mean60.size)-60, mean60, label = 'mean60')
+    ax.plot(np.arange(0, mean90.size)-90, mean90, label = 'mean90')    
+
+    ax.legend()
+    ax.grid()
+    canvas = FigureCanvasTkAgg(fig, Canvas_1)
+    canvas.get_tk_widget().grid(row=1,column=24, rowspan=5, sticky="nesw")
+    canvas.show()    
+    
+
+win=tk.Tk()
+win.title("GUI")
+win.geometry("1200x700")
+
+
+########################################################################
+
+var_label1 = StringVar()
+label_1 = Message( win, textvariable=var_label1)
+label_1.place(x=60, y=5)
+var_label1.set("年報")
+
+var_label2 = StringVar()
+label_2 = Message( win, textvariable=var_label2)
+label_2.place(x=650, y=5)
+var_label2.set("季報")
+
+########################################################################
+#Listbox_1 = Listbox(win)
+#Listbox_1.place(height=300, width=200, x=950,y=350)
+#Listbox_1.insert(1, ".obj")
+#Listbox_1.insert(2, ".3ds")
+#Listbox_1.insert(3, ".skt")
+#
+#Listbox_1.config(yscrollcommand=Scrolbar_1.set)
+########################################################################
+
+#######################################################################  
+
+Canvas_1 = tk.Canvas(win, bg="White", height=500, width=850)
+Canvas_1.place(x=20, y=170)
+
+#######################################################################  
+
+text = Text(win)
+text.insert(INSERT, "Hello.....")
+text.insert(END, "Bye Bye.....")
+
+text.place(height=50, width=200, x=950 , y =298)
+
+########################################################################
+Button_month = tk.Button(win, text ="月營收", command = monthly_Button)
+Button_month.place(height=30, width=60, x=1030, y=250)
+########################################################################
+
+########################################################################
+Button_get = tk.Button(win, text ="獲取資料", command = season_Button)
+Button_get.place(height=30, width=60, x=1030, y=210)
+########################################################################
+
+########################################################################
+Button_search = tk.Button(win, text ="篩選", command = search_Button)
+Button_search.place(height=30, width=60, x=950, y=210)
+########################################################################
+ 
+########################################################################
+Button_search = tk.Button(win, text ="線圖", command = line_Button)
+Button_search.place(height=30, width=60, x=950, y=250)
+########################################################################
+   
+v_pross = IntVar() 
+Checkbutton_pos = tk.Checkbutton(win, text = "回歸法", variable=v_pross, height=1, width = 5)
+Checkbutton_pos.place(x=1100, y=242)
+
+v_avgr = IntVar() 
+Checkbutton_avg = tk.Checkbutton(win, text = "平均法", variable=v_avgr, height=1, width = 5)
+Checkbutton_avg.place(x=1100, y=262)
+
+########################################################################
+def submit(): 
+    a = v_D08.get()
+    print(a)
+    b = var_D08.get()
+    print(b)
+    
+v_int = IntVar() 
+Checkbutton_get = tk.Checkbutton(win, text = "網路", variable=v_int, height=1, width = 3)
+Checkbutton_get.place(x=1100, y=210)
+########################################################################
+v_D13 = IntVar() 
+Checkbutton_D13 = tk.Checkbutton(win, text = "權益報酬率(%)>", variable=v_D13, height=1, width = 20)
+Checkbutton_D13.place(x=10, y=30)
+var_D13 = StringVar()
+Entry_D13 = Entry(win,  textvariable = var_D13)
+var_D13.set("0")
+Entry_D13.place(height=20, width=20 , x=148, y=33)
+########################################################################
+v_D12 = IntVar() 
+Checkbutton_D12 = tk.Checkbutton(win, text = "資產報酬率(%)>", variable=v_D12, height=1, width = 20)
+Checkbutton_D12.place(x=10, y=50)
+var_D12 = StringVar()
+Entry_D12 = Entry(win,  textvariable = var_D12)
+var_D12.set("1")
+Entry_D12.place(height=20, width=20 , x=148, y=53)
+########################################################################
+v_D01 = IntVar() 
+Checkbutton_D01 = tk.Checkbutton(win, text = "負債佔資產比率(%)<", variable=v_D01, height=1, width = 20)
+Checkbutton_D01.place(x=22, y=70)
+var_D01 = StringVar()
+Entry_D01 = Entry(win,  textvariable = var_D01)
+var_D01.set("2")
+Entry_D01.place(height=20, width=20 , x=172, y=73)
+########################################################################
+Checkbutton_FPE = tk.Checkbutton(win, text = "資金佔設備比率(%)<", height=1, width = 20)
+Checkbutton_FPE.place(x=196, y=67)
+var_FPE = StringVar()
+Entry_FPE = Entry(win,  textvariable = var_FPE)
+var_FPE.set("3")
+Entry_FPE.place(height=20, width=20 , x=346, y=70)
+########################################################################
+v_D03 = IntVar() 
+Checkbutton_D03 = tk.Checkbutton(win, text = "流動比率(%)>", variable=v_D03 , height=1, width = 20)
+Checkbutton_D03.place(x=178, y=47)
+var_D03 = StringVar()
+Entry_D03 = Entry(win,  textvariable = var_D03)
+var_D03.set("4")
+Entry_D03.place(height=20, width=20 , x=313, y=50)
+########################################################################
+v_D04 = IntVar() 
+Checkbutton_D04 = tk.Checkbutton(win, text = "速動比率(%)>", variable=v_D04 , height=1, width = 20)
+Checkbutton_D04.place(x=178, y=27)
+var_D04 = StringVar()
+Entry_D04 = Entry(win,  textvariable = var_D04)
+var_D04.set("5")
+Entry_D04.place(height=20, width=20 , x=313, y=30)
+########################################################################
+v_D05 = IntVar() 
+Checkbutton_D05 = tk.Checkbutton(win, text = "利息保障倍數(%)>", variable=v_D05 , height=1, width = 20  )
+Checkbutton_D05.place(x=190, y=7)
+var_D05 = StringVar()
+Entry_D05 = Entry(win,  textvariable = var_D05)
+var_D05.set("6")
+Entry_D05.place(height=20, width=20 , x=335, y=10)
+########################################################################
+v_D06 = IntVar() 
+Checkbutton_D06 = tk.Checkbutton(win, text = "應收款項週轉率(次)>", variable=v_D06 ,height=1, width = 20 )
+Checkbutton_D06.place(x=197, y=128)
+var_D06 = StringVar()
+Entry_D06 = Entry(win,  textvariable = var_D06)
+var_D06.set("7")
+Entry_D06.place(height=20, width=20 , x=347, y=130)
+########################################################################
+v_D15 = IntVar() 
+Checkbutton_D15 = tk.Checkbutton(win, text = "純益率(%)>", variable=v_D15 , height=1, width = 19 )
+Checkbutton_D15.place(x=2, y=90)
+var_D15 = StringVar()
+Entry_D15 = Entry(win,  textvariable = var_D15)
+var_D15.set("16")
+Entry_D15.place(height=20, width=20 , x=123, y=93)
+########################################################################
+v_D16 = IntVar() 
+Checkbutton_D16 = tk.Checkbutton(win, text = "每股盈餘(元)>", variable=v_D16 , height=1, width = 19 )
+Checkbutton_D16.place(x=8, y=110)
+var_D16 = StringVar()
+Entry_D16 = Entry(win,  textvariable = var_D16)
+var_D16.set("17")
+Entry_D16.place(height=20, width=20 , x=138, y=113)
+########################################################################
+v_C01 = IntVar() 
+Checkbutton_C01 = tk.Checkbutton(win, text = "稅後純益率(%)>", variable=v_C01 , height=1, width = 19)
+Checkbutton_C01.place(x=578, y=28)
+var_C01 = StringVar()
+Entry_C01 = Entry(win,  textvariable = var_C01)
+var_C01.set("a")
+Entry_C01.place(height=20, width=20 , x=712, y=31)
+########################################################################
+v_C02 = IntVar() 
+Checkbutton_C02 = tk.Checkbutton(win, text = "毛利率(%)>", variable=v_C02 ,height=1, width = 19 )
+Checkbutton_C02.place(x=566, y=48)
+var_C02 = StringVar()
+Entry_C02 = Entry(win,  textvariable = var_C02)
+var_C02.set("b")
+Entry_C02.place(height=20, width=20 , x=688, y=51)
+########################################################################
+v_C03 = IntVar() 
+Checkbutton_C03 = tk.Checkbutton(win, text = "營業利益率(%)>",  variable=v_C03 , height=1, width = 19 )
+Checkbutton_C03.place(x=578, y=68)
+var_C03 = StringVar()
+Entry_C03 = Entry(win,  textvariable = var_C03)
+var_C03.set("c")
+Entry_C03.place(height=20, width=20 , x=712, y=71)
+########################################################################
+v_D19 = IntVar() 
+Checkbutton_D19 = tk.Checkbutton(win, text = "現金再投資比率(%)>", variable=v_D19 , height=1, width = 19 )
+Checkbutton_D19.place(x=200, y=88)
+var_D19 = StringVar()
+Entry_D19 = Entry(win,  textvariable = var_D19)
+var_D19.set("20")
+Entry_D19.place(height=20, width=20 , x=348, y=91)
+########################################################################
+v_D18 = IntVar() 
+Checkbutton_D18 = tk.Checkbutton(win, text = "現金流量允當比率(%)>", variable=v_D18 , height=1, width = 19 )
+Checkbutton_D18.place(x=206, y=108)
+var_D18 = StringVar()
+Entry_D18 = Entry(win,  textvariable = var_D18)
+var_D18.set("19")
+Entry_D18.place(height=20, width=20 , x=359, y=111)
+########################################################################
+v_D17 = IntVar() 
+Checkbutton_D17 = tk.Checkbutton(win, text = "現金流量比率(%)>", variable=v_D17 , height=1, width = 19)
+Checkbutton_D17.place(x=390, y=26)
+var_D17 = StringVar()
+Entry_D17 = Entry(win,  textvariable = var_D17)
+var_D17.set("18")
+Entry_D17.place(height=20, width=20 , x=530, y=32)
+########################################################################
+v_D14 = IntVar() 
+Checkbutton_D14 = tk.Checkbutton(win, text = "實收資本比率(%)>", variable=v_D14 , height=1, width = 19 )
+Checkbutton_D14.place(x=390, y=46)
+var_D14 = StringVar()
+Entry_D14 = Entry(win,  textvariable = var_D14)
+var_D14.set("15")
+Entry_D14.place(height=20, width=20 , x=530, y=50)
+########################################################################
+v_D07 = IntVar() 
+Checkbutton_D07 = tk.Checkbutton(win, text = "平均收現日數>", variable=v_D07 , height=1, width = 19 )
+Checkbutton_D07.place(x=380, y=6)
+var_D07 = StringVar()
+Entry_D07 = Entry(win,  textvariable = var_D07)
+var_D07.set("8")
+Entry_D07.place(height=20, width=20 , x=512, y=9)
+########################################################################
+v_D08 = IntVar() 
+Checkbutton_D08 = tk.Checkbutton(win, text = "存貨週轉率(次)>", variable=v_D08 , height=1, width = 19 , command=submit)
+Checkbutton_D08.place(x=384, y=66)
+var_D08 = StringVar()
+Entry_D08 = Entry(win,  textvariable = var_D08)
+var_D08.set("9")
+Entry_D08.place(height=20, width=20 , x=520, y=70)
+########################################################################
+########################################################################
+Checkbutton_ASRT = tk.Checkbutton(win, text = "設備週轉率(次)>", height=1, width = 19)
+Checkbutton_ASRT.place(x=384, y=86)
+var_ASRT = StringVar()
+Entry_ASRT = Entry(win,  textvariable = var_ASRT)
+var_ASRT.set("11")
+Entry_ASRT.place(height=20, width=20 , x=520, y=90)
+########################################################################
+########################################################################
+Checkbutton_ASSD = tk.Checkbutton(win, text = "平均銷貨日數>", height=1, width = 19)
+Checkbutton_ASSD.place(x=380, y=106)
+var_ASSD = StringVar()
+Entry_ASSD = Entry(win,  textvariable = var_ASSD)
+var_ASSD.set("10")
+Entry_ASSD.place(height=20, width=20 , x=513, y=110)
+########################################################################
+########################################################################
+Checkbutton_TASS = tk.Checkbutton(win, text = "總資產週轉率(次)>", height=1, width = 19)
+Checkbutton_TASS.place(x=390, y=126)
+var_TASS = StringVar()
+Entry_TASS = Entry(win,  textvariable = var_TASS)
+var_TASS.set("12")
+Entry_TASS.place(height=20, width=20 , x=532, y=130)
+########################################################################
+########################################################################
+Checkbutton_EPSD = tk.Checkbutton(win, text = "基本每股盈餘（元）>", height=1, width = 19)
+Checkbutton_EPSD.place(x=592, y=88)
+var_EPSD = StringVar()
+Entry_EPSD = Entry(win,  textvariable = var_EPSD)
+var_EPSD.set("e")
+Entry_EPSD.place(height=20, width=20 , x=742, y=91)
+########################################################################
+########################################################################
+Checkbutton_PTPT = tk.Checkbutton(win, text = "本期淨利（淨損）>", height=1, width = 19)
+Checkbutton_PTPT.place(x=586, y=108)
+var_PTPT = StringVar()
+Entry_PTPT = Entry(win,  textvariable = var_PTPT)
+var_PTPT.set("f")
+Entry_PTPT.place(height=20, width=20 , x=732, y=111)
+########################################################################
+########################################################################
+Checkbutton_PPIN = tk.Checkbutton(win, text = "營業收入>", height=1, width = 19)
+Checkbutton_PPIN.place(x=562, y=128)
+var_PPIN = StringVar()
+Entry_PPIN = Entry(win,  textvariable = var_PPIN)
+var_PPIN.set("g")
+Entry_PPIN.place(height=20, width=20 , x=684, y=131)
+########################################################################
+########################################################################
+Checkbutton_TOAS = tk.Checkbutton(win, text = "資產總額>", height=1, width = 19)
+Checkbutton_TOAS.place(x=762, y=7)
+var_TOAS = StringVar()
+Entry_TOAS = Entry(win,  textvariable = var_TOAS)
+var_TOAS.set("h")
+Entry_TOAS.place(height=20, width=20 , x=884, y=9)
+########################################################################
+########################################################################
+Checkbutton_ROAS = tk.Checkbutton(win, text = "權益總額>", height=1, width = 19)
+Checkbutton_ROAS.place(x=762, y=27)
+var_ROAS = StringVar()
+Entry_ROAS = Entry(win,  textvariable = var_ROAS)
+var_ROAS.set("i")
+Entry_ROAS.place(height=20, width=20 , x=884, y=29)
+########################################################################
+########################################################################
+Checkbutton_ESRV = tk.Checkbutton(win, text = "每股參考淨值>", height=1, width = 19)
+Checkbutton_ESRV.place(x=774, y=47)
+var_ESRV = StringVar()
+Entry_ESRV = Entry(win,  textvariable = var_ESRV)
+var_ESRV.set("j")
+Entry_ESRV.place(height=20, width=20 , x=908, y=49)
+########################################################################
+########################################################################
+Checkbutton_STCK = tk.Checkbutton(win, text = "股本>", height=1, width = 19)
+Checkbutton_STCK.place(x=750, y=67)
+var_STCK = StringVar()
+Entry_STCK = Entry(win,  textvariable = var_STCK)
+var_STCK.set("k")
+Entry_STCK.place(height=20, width=20 , x=862, y=69)
+########################################################################
+########################################################################
+Checkbutton_CACK = tk.Checkbutton(win, text = "資本公積>", height=1, width = 19)
+Checkbutton_CACK.place(x=762, y=87)
+var_CACK = StringVar()
+Entry_CACK = Entry(win,  textvariable = var_CACK)
+var_CACK.set("l")
+Entry_CACK.place(height=20, width=20 , x=884, y=89)
+########################################################################
+########################################################################
+Checkbutton_RMER = tk.Checkbutton(win, text = "保留盈餘>", height=1, width = 19)
+Checkbutton_RMER.place(x=762, y=107)
+var_RMER = StringVar()
+Entry_RMER = Entry(win,  textvariable = var_RMER)
+var_RMER.set("m")
+Entry_RMER.place(height=20, width=20 , x=884, y=109)
+########################################################################
+########################################################################
+Checkbutton_OTHS = tk.Checkbutton(win, text = "其他權益>", height=1, width = 19)
+Checkbutton_OTHS.place(x=762, y=127)
+var_OTHS = StringVar()
+Entry_OTHS = Entry(win,  textvariable = var_OTHS)
+var_OTHS.set("o")
+Entry_OTHS.place(height=20, width=20 , x=884, y=129)
+########################################################################
+########################################################################
+Checkbutton_SSTK = tk.Checkbutton(win, text = "庫藏股票>", height=1, width = 19)
+Checkbutton_SSTK.place(x=942, y=7)
+var_SSTK = StringVar()
+Entry_SSTK = Entry(win,  textvariable = var_SSTK)
+var_SSTK.set("p")
+Entry_SSTK.place(height=20, width=20 , x=1064, y=9)
+########################################################################
+########################################################################
+Checkbutton_NCOL = tk.Checkbutton(win, text = "非控制權益>", height=1, width = 19)
+Checkbutton_NCOL.place(x=948, y=27)
+var_NCOL = StringVar()
+Entry_NCOL = Entry(win,  textvariable = var_NCOL)
+var_NCOL.set("q")
+Entry_NCOL.place(height=20, width=20 , x=1076, y=29)
+########################################################################
+########################################################################
+Checkbutton_CCDB = tk.Checkbutton(win, text = "流動負債>", height=1, width = 19)
+Checkbutton_CCDB.place(x=942, y=47)
+var_CCDB = StringVar()
+Entry_CCDB = Entry(win,  textvariable = var_CCDB)
+var_CCDB.set("r")
+Entry_CCDB.place(height=20, width=20 , x=1065, y=49)
+########################################################################
+########################################################################
+Checkbutton_NCDB = tk.Checkbutton(win, text = "非流動負債>", height=1, width = 19)
+Checkbutton_NCDB.place(x=948, y=67)
+var_NCDB = StringVar()
+Entry_NCDB = Entry(win,  textvariable = var_NCDB)
+var_NCDB.set("s")
+Entry_NCDB.place(height=20, width=20 , x=1075, y=69)
+########################################################################
+########################################################################
+Checkbutton_CCAS = tk.Checkbutton(win, text = "流動資產>", height=1, width = 19)
+Checkbutton_CCAS.place(x=942, y=87)
+var_CCAS = StringVar()
+Entry_CCAS = Entry(win,  textvariable = var_CCAS)
+var_CCAS.set("t")
+Entry_CCAS.place(height=20, width=20 , x=1065, y=89)
+########################################################################
+########################################################################
+Checkbutton_NCAS = tk.Checkbutton(win, text = "非流動資產>", height=1, width = 19)
+Checkbutton_NCAS.place(x=948, y=107)
+var_NCAS = StringVar()
+Entry_NCAS = Entry(win,  textvariable = var_NCAS)
+var_NCAS.set("u")
+Entry_NCAS.place(height=20, width=20 , x=1075, y=109)
+########################################################################
+def CurSelet(evt):
+    global select_value
+    value=str((Listbox_1.get(Listbox_1.curselection())))
+    text.delete(1.0,END)
+    text.insert(INSERT,value)
+    select_value = value[0:4]
+    print(select_value)
+    
+    
+Listbox_1 = Listbox(win)
+Scrolbar_1 = tk.Scrollbar(Listbox_1,orient=tk.VERTICAL)
+
+Scrolbar_1.config(command=Listbox_1.yview)
+Scrolbar_1.pack(side="right", fill="y")
+
+Listbox_1.config(yscrollcommand=Scrolbar_1.set)
+Listbox_1.bind('<<ListboxSelect>>',CurSelet)
+
+Listbox_1.place(height=300, width=200, x=950,y=350)
+Listbox_1.insert(1, ".obj")
+Listbox_1.insert(2, ".3ds")
+Listbox_1.insert(3, ".skt")
+########################################################################
+for i in range(30): 
+   Listbox_1.insert(tk.END, str(i)*3)
+   
+
+########################################################################
+
+win.mainloop()
